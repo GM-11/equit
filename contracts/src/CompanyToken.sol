@@ -1,0 +1,190 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.26;
+
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../lib/openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+
+contract CompanyToken is ERC20, ERC20Burnable {
+    struct ShareHolder {
+        uint256 id;
+        address addr;
+        uint256 amount;
+    }
+
+    struct Proposal {
+        address owner;
+        bytes data;
+        bool executed;
+        uint256 timestamp;
+        uint256 approvals;
+        uint256 totalProposedDilutions;
+        // Dilutions[] newShareDistribution;
+    }
+
+    struct Dilutions {
+        uint256 id;
+        uint256 timestamp;
+        address from;
+        address to;
+        uint256 amount;
+    }
+
+    event ApproveProposal(address indexed owner, uint256 indexed txIndex);
+    event RevokeProposal(address indexed owner, uint256 indexed txIndex);
+    event ExecuteProposal(address indexed owner, uint256 indexed txIndex);
+
+    mapping(uint256 => ShareHolder) public shareHolders;
+    uint256 public shareHoldersCount;
+
+    mapping(uint256 => Proposal) public proposals;
+    uint256 public proposalsCount;
+
+    mapping(uint256 => mapping(uint256 => Dilutions)) public proposedDilutions;
+
+    mapping(uint256 => mapping(address => bool)) public approved;
+
+    uint256 public MIN_REQUIRED;
+
+    modifier proposalExists(uint256 proposalId) {
+        require(proposalId < proposalsCount, "proposal does not exist");
+        _;
+    }
+
+    modifier enoughApprovals(uint256 proposalId) {
+        require(
+            proposals[proposalId].approvals >= MIN_REQUIRED,
+            "Not enough approvals"
+        );
+        _;
+    }
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _initialShareHolder,
+        uint256 _minRequired
+    ) ERC20(_name, _symbol) {
+        require(_initialShareHolder != address(0), "Invalid address");
+        uint256 amount = 100 * (10 ** decimals());
+        _mint(_initialShareHolder, amount);
+        unchecked {
+            shareHolders[shareHoldersCount] = ShareHolder(
+                shareHoldersCount,
+                _initialShareHolder,
+                amount
+            );
+            shareHoldersCount++;
+        }
+        MIN_REQUIRED = _minRequired;
+    }
+
+    function addProposal(
+        bytes calldata data,
+        Dilutions[] calldata newShareDistribution
+    ) external {
+        require(data.length > 0, "Invalid data");
+        proposals[proposalsCount] = Proposal(
+            msg.sender,
+            data,
+            false,
+            block.timestamp,
+            0,
+            newShareDistribution.length
+        );
+        for (uint256 i = 0; i < newShareDistribution.length; ) {
+            proposedDilutions[proposalsCount][i] = newShareDistribution[i];
+            unchecked {
+                ++i;
+            }
+        }
+        unchecked {
+            proposalsCount++;
+        }
+    }
+
+    function approveProposal(
+        uint256 proposalId
+    ) external proposalExists(proposalId) {
+        require(approved[proposalId][msg.sender] == false, "Already approved");
+        approved[proposalId][msg.sender] = true;
+        proposals[proposalId].approvals++;
+    }
+
+    function revokeProposal(
+        uint256 proposalId
+    ) external proposalExists(proposalId) {
+        require(approved[proposalId][msg.sender] == true, "Not approved");
+        approved[proposalId][msg.sender] = false;
+    }
+
+    function executeProposal(
+        uint256 proposalId
+    ) external proposalExists(proposalId) enoughApprovals(proposalId) {
+        require(
+            proposals[proposalId].executed == false,
+            "Proposal already executed"
+        );
+
+        proposals[proposalId].executed = true;
+
+        uint256 total = proposals[proposalId].totalProposedDilutions;
+
+        for (uint256 i = 0; i < total; ) {
+            Dilutions memory dilution = proposedDilutions[proposalId][i];
+            _transfer(dilution.from, dilution.to, dilution.amount);
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function updateProposal(
+        uint256 proposalId,
+        bytes calldata data,
+        Dilutions[] calldata newShareDistribution
+    ) external proposalExists(proposalId) {
+        require(
+            proposals[proposalId].owner == msg.sender,
+            "Not the owner of the proposal"
+        );
+        require(data.length > 0, "Invalid data");
+        proposals[proposalId].data = data;
+
+        for (uint256 i = 0; i < newShareDistribution.length; ) {
+            proposedDilutions[proposalsCount][i] = newShareDistribution[i];
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function getProposal(
+        uint256 proposalId
+    ) external view returns (Proposal memory) {
+        return proposals[proposalId];
+    }
+
+    function getAllProposals() external view returns (Proposal[] memory) {
+        Proposal[] memory _proposals = new Proposal[](proposalsCount);
+        for (uint256 i = 0; i < proposalsCount; ) {
+            _proposals[i] = proposals[i];
+            unchecked {
+                ++i;
+            }
+        }
+        return _proposals;
+    }
+
+    function getAllShareHolders() external view returns (ShareHolder[] memory) {
+        ShareHolder[] memory _shareHolders = new ShareHolder[](
+            shareHoldersCount
+        );
+        for (uint256 i = 0; i < shareHoldersCount; ) {
+            _shareHolders[i] = shareHolders[i];
+            unchecked {
+                ++i;
+            }
+        }
+        return _shareHolders;
+    }
+}
