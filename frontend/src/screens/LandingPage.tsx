@@ -3,10 +3,8 @@ function LandingPage() {
     <main>
       <h1>EQUIT</h1>
 
-      <h2>
-        Manage your equity on <br />
-        BITCOIN
-      </h2>
+      <p>Manage your equity on</p>
+      <h2 className="font-bold">BITCOIN</h2>
     </main>
   );
 }
