@@ -14,37 +14,31 @@ function CreateCompany() {
   const [symbol, setSymbol] = useState("");
   const [minRequired, setMinRequired] = useState<number>(0);
 
-  const { isConnected, address } = useWeb3ModalAccount();
+  const { isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
-  const [provider, setProvider] = useState<ethers.BrowserProvider>();
-  const [signer, setSigner] = useState<ethers.Signer>();
-
-  async function setUp() {
-    const ethersProvider = new BrowserProvider(
-      walletProvider as ethers.Eip1193Provider
-    );
-    const signer = await ethersProvider.getSigner();
-
-    setProvider(ethersProvider);
-    setSigner(signer);
-  }
 
   useEffect(function () {
-    setUp();
-    const contract = new ethers.Contract(
-      COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
-      COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
-      provider
-    );
+    if (isConnected) {
+      const provider = new BrowserProvider(
+        walletProvider as ethers.Eip1193Provider
+      );
+      const contract = new ethers.Contract(
+        COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
+        COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
+        provider
+      );
 
-    contract.on("CompanyTokenCreated", function (event) {
-      console.log("Company Token Created \n", event);
-    });
-    return function () {
-      contract.off("CompanyTokenCreated", function(event) {
-        console.log("Company Token Created OFF\n", event);
+      console.log(contract);
+
+      contract.on("CompanyTokenCreated", function (event) {
+        console.log("Company Token Created \n", event);
       });
-    };
+      return function () {
+        contract.off("CompanyTokenCreated", function (event) {
+          console.log("Company Token Created OFF\n", event);
+        });
+      };
+    }
   }, []);
 
   async function createCompany() {
@@ -68,6 +62,13 @@ function CreateCompany() {
       alert("Symbol too long");
     }
 
+    const ethersProvider = new BrowserProvider(
+      walletProvider as ethers.Eip1193Provider
+    );
+    const signer = await ethersProvider.getSigner();
+
+    console.log(signer);
+
     if (isConnected) {
       const contract = new ethers.Contract(
         COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
@@ -79,7 +80,6 @@ function CreateCompany() {
         const res = await contract.createCompanyToken(
           companyName,
           symbol,
-
           minRequired
         );
         console.log(res);
