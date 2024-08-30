@@ -22,16 +22,28 @@ contract CompanyToken is ERC20, ERC20Burnable {
     }
 
     struct Dilutions {
-        uint256 id;
+        // uint256 id;
         uint256 timestamp;
         address from;
         address to;
         uint256 amount;
     }
 
+    event AddProposal(
+        address indexed owner,
+        uint256 indexed txIndex,
+        bytes data,
+        uint256 totalProposedDilutions
+    );
     event ApproveProposal(address indexed owner, uint256 indexed txIndex);
     event RevokeProposal(address indexed owner, uint256 indexed txIndex);
     event ExecuteProposal(address indexed owner, uint256 indexed txIndex);
+    event UpdateProposal(
+        address indexed owner,
+        uint256 indexed txIndex,
+        bytes data,
+        uint256 totalProposedDilutions
+    );
 
     mapping(uint256 => ShareHolder) public shareHolders;
     uint256 public shareHoldersCount;
@@ -80,19 +92,33 @@ contract CompanyToken is ERC20, ERC20Burnable {
 
     function addProposal(
         bytes calldata data,
-        Dilutions[] calldata newShareDistribution
+        address[] calldata dilutionsTO,
+        address[] calldata dilutionsFROM,
+        uint256[] calldata dilutionsAMOUNT,
+        uint256 totalProposedDilutions
     ) external {
         require(data.length > 0, "Invalid data");
+        require(
+            dilutionsTO.length == dilutionsFROM.length &&
+                dilutionsTO.length == dilutionsAMOUNT.length &&
+                dilutionsTO.length == totalProposedDilutions,
+            "Invalid dilutions"
+        );
         proposals[proposalsCount] = Proposal(
             msg.sender,
             data,
             false,
             block.timestamp,
             0,
-            newShareDistribution.length
+            totalProposedDilutions
         );
-        for (uint256 i = 0; i < newShareDistribution.length; ) {
-            proposedDilutions[proposalsCount][i] = newShareDistribution[i];
+        for (uint256 i = 0; i < totalProposedDilutions; ) {
+            proposedDilutions[proposalsCount][i] = Dilutions(
+                block.timestamp,
+                dilutionsFROM[i],
+                dilutionsTO[i],
+                dilutionsAMOUNT[i]
+            );
             unchecked {
                 ++i;
             }
@@ -100,6 +126,13 @@ contract CompanyToken is ERC20, ERC20Burnable {
         unchecked {
             proposalsCount++;
         }
+
+        emit AddProposal(
+            msg.sender,
+            proposalsCount - 1,
+            data,
+            totalProposedDilutions
+        );
     }
 
     function approveProposal(
@@ -108,6 +141,8 @@ contract CompanyToken is ERC20, ERC20Burnable {
         require(approved[proposalId][msg.sender] == false, "Already approved");
         approved[proposalId][msg.sender] = true;
         proposals[proposalId].approvals++;
+
+        emit ApproveProposal(msg.sender, proposalId);
     }
 
     function revokeProposal(
@@ -115,6 +150,8 @@ contract CompanyToken is ERC20, ERC20Burnable {
     ) external proposalExists(proposalId) {
         require(approved[proposalId][msg.sender] == true, "Not approved");
         approved[proposalId][msg.sender] = false;
+
+        emit RevokeProposal(msg.sender, proposalId);
     }
 
     function executeProposal(
@@ -136,6 +173,8 @@ contract CompanyToken is ERC20, ERC20Burnable {
                 ++i;
             }
         }
+
+        emit ExecuteProposal(msg.sender, proposalId);
     }
 
     function updateProposal(
@@ -156,6 +195,13 @@ contract CompanyToken is ERC20, ERC20Burnable {
                 ++i;
             }
         }
+
+        emit UpdateProposal(
+            msg.sender,
+            proposalId,
+            data,
+            newShareDistribution.length
+        );
     }
 
     function getProposal(
