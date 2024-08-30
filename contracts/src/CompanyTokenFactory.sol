@@ -3,7 +3,14 @@ pragma solidity ^0.8.26;
 import "./CompanyToken.sol";
 
 contract CompanyTokenFactory {
-    mapping(uint256 => address) public companyTokens;
+    struct CompanyTokenData {
+        string name;
+        string symbol;
+        address owner;
+        address companyToken;
+    }
+
+    mapping(uint256 => CompanyTokenData) public companyTokens;
     uint256 public companyTokensCount;
 
     event CompanyTokenCreated(
@@ -14,35 +21,40 @@ contract CompanyTokenFactory {
     function createCompanyToken(
         string memory name,
         string memory symbol,
-        address owner,
         uint256 minRequired
     ) public {
-        require(
-            companyTokens[companyTokensCount] == address(0),
-            "CompanyTokenFactory: token already exists"
-        );
-
         CompanyToken companyToken = new CompanyToken(
             name,
             symbol,
-            owner,
+            msg.sender,
             minRequired
         );
-        companyTokens[companyTokensCount] = address(companyToken);
+        companyTokens[companyTokensCount] = CompanyTokenData(
+            name,
+            symbol,
+            msg.sender,
+            address(companyToken)
+        );
 
         unchecked {
             companyTokensCount++;
         }
 
-        emit CompanyTokenCreated(owner, address(companyToken));
+        emit CompanyTokenCreated(msg.sender, address(companyToken));
     }
 
     function getCompanyToken(uint256 tokenId) public view returns (address) {
-        return companyTokens[tokenId];
+        return companyTokens[tokenId].companyToken;
     }
 
-    function getAllCompanyTokens() public view returns (address[] memory) {
-        address[] memory tokens = new address[](companyTokensCount);
+    function getAllCompanyTokens()
+        public
+        view
+        returns (CompanyTokenData[] memory)
+    {
+        CompanyTokenData[] memory tokens = new CompanyTokenData[](
+            companyTokensCount
+        );
         uint256 _total = companyTokensCount;
         for (uint256 i = 0; i < _total; ) {
             tokens[i] = companyTokens[i];
