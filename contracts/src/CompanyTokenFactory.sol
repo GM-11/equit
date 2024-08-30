@@ -22,7 +22,7 @@ contract CompanyTokenFactory {
         string memory name,
         string memory symbol,
         uint256 minRequired
-    ) public {
+    ) external {
         CompanyToken companyToken = new CompanyToken(
             name,
             symbol,
@@ -43,12 +43,12 @@ contract CompanyTokenFactory {
         emit CompanyTokenCreated(msg.sender, address(companyToken));
     }
 
-    function getCompanyToken(uint256 tokenId) public view returns (address) {
+    function getCompanyToken(uint256 tokenId) external view returns (address) {
         return companyTokens[tokenId].companyToken;
     }
 
     function getAllCompanyTokens()
-        public
+        external
         view
         returns (CompanyTokenData[] memory)
     {
