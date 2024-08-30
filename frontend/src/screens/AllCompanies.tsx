@@ -3,11 +3,13 @@ import {
   useWeb3ModalProvider,
 } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  COMPANY_TOKEN_CONTRACT_ABI,
   COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
   COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
 } from "../utils/constants";
+import { Link } from "react-router-dom";
 
 type company = {
   name: string;
@@ -18,6 +20,7 @@ type company = {
 
 function AllCompanies() {
   const { walletProvider } = useWeb3ModalProvider();
+  const { address } = useWeb3ModalAccount();
   const [companies, setCompanies] = useState<company[]>([]);
 
   async function setUp() {
@@ -34,37 +37,83 @@ function AllCompanies() {
 
     let c: company[] = [];
     const allTokens = await contract.getAllCompanyTokens();
-    console.log(allTokens);
 
     for (let index = 0; index < allTokens.length; index++) {
       const element = allTokens[index];
-      c.push({
-        name: element[0],
-        symbol: element[1],
-        address: element[2],
-        owner: element[3],
-      });
+
+      let companyContract = new ethers.Contract(
+        element[3],
+        COMPANY_TOKEN_CONTRACT_ABI,
+        signer
+      );
+
+      const shareHolders = await companyContract.getAllShareHolders();
+
+      for (let index = 0; index < shareHolders.length; index++) {
+        const holder = shareHolders[index];
+        if (holder[1] === address) {
+          c.push({
+            name: element[0],
+            symbol: element[1],
+            owner: element[2],
+            address: element[3],
+          });
+          c.push({
+            name: element[0],
+            symbol: element[1],
+            owner: element[2],
+            address: element[3],
+          });
+          c.push({
+            name: element[0],
+            symbol: element[1],
+            owner: element[2],
+            address: element[3],
+          });
+          c.push({
+            name: element[0],
+            symbol: element[1],
+            owner: element[2],
+            address: element[3],
+          });
+        }
+      }
     }
     setCompanies(c);
-    console.log(companies);
   }
 
   useEffect(function () {
     setUp();
+    return () => {};
   }, []);
 
   return (
-    <main>
-      <w3m-account-button />
-      <h1>All Companies</h1>
-      {companies.map((c, index) => (
-        <div key={index}>
-          <h2>{c.name}</h2>
-          <h3>{c.symbol}</h3>
-          <h4>Token address: {c.address}</h4>
-          <h5>Owner: {c.owner}</h5>
-        </div>
-      ))}
+    <main className="flex flex-col justify-start items-start">
+      <section className="p-4 flex flex-row w-full justify-between">
+        <h1>All Companies</h1>
+        <w3m-account-button />
+      </section>
+      <section className="grid grid-cols-2 w-full mt-16 items-center  justify-center">
+        {companies.map((c, index) => (
+          <Link
+            to={`/company/${c.address}`}
+            state={{ name: c.name, symbol: c.symbol, owner: c.owner }}
+            className="border-2 border-emerald-300 p-4 flex flex-col justify-start items-start m-4 rounded-xl"
+            key={index}
+          >
+            <section className="flex flex-row items-baseline mb-4 ">
+              <h2>{c.name}</h2>
+              <h3 className="ml-4">{c.symbol}</h3>
+            </section>
+            <h4>
+              Token address: <strong>{c.address}</strong>
+            </h4>
+            <h4>
+              Owner: <strong>{c.owner}</strong>
+            </h4>
+          </Link>
+        ))}
+      </section>{" "}
     </main>
   );
 }
