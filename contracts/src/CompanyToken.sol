@@ -13,6 +13,7 @@ contract CompanyToken is ERC20, ERC20Burnable {
 
     struct Proposal {
         address owner;
+        string title;
         bytes data;
         bool executed;
         uint256 timestamp;
@@ -92,9 +93,10 @@ contract CompanyToken is ERC20, ERC20Burnable {
 
     function addProposal(
         bytes calldata data,
+        string calldata title,
         address[] calldata dilutionsTO,
         address[] calldata dilutionsFROM,
-        uint256[] calldata dilutionsAMOUNT,
+        uint256[] calldata dilutionsAMOUNT, // capital kitna jana hai
         uint256 totalProposedDilutions
     ) external {
         require(data.length > 0, "Invalid data");
@@ -106,6 +108,7 @@ contract CompanyToken is ERC20, ERC20Burnable {
         );
         proposals[proposalsCount] = Proposal(
             msg.sender,
+            title,
             data,
             false,
             block.timestamp,
