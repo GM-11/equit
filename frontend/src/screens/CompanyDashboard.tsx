@@ -5,9 +5,10 @@ import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";
 import { MouseEventHandler, useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { chartOptions, data, shareHolder } from "../utils/types";
-
-const colors = ["#FFCF00", "#FFC000"];
+import { chartOptions, data, proposal, shareHolder } from "../utils/types";
+import { hexBytesToString } from "../utils/functions";
+import AddProposalModel from "../modals/AddProposalModel";
+import ShowProposalModel from "../modals/ShowProposalModel";
 
 function CompanyDashboard() {
   const { walletProvider } = useWeb3ModalProvider();
@@ -16,6 +17,9 @@ function CompanyDashboard() {
   const [companyData, setCompanyData] = useState<data>();
   const [series, setSeries] = useState<number[]>([]);
   const [showAddProposalModel, setShowAddProposalModel] = useState(false);
+  const [showPropsalModel, setShowProposalModel] = useState<proposal | null>(
+    null
+  );
   const [options, setOptions] = useState<ApexOptions>(chartOptions);
 
   async function getData() {
@@ -35,16 +39,39 @@ function CompanyDashboard() {
 
     const _allShareHolders = await contract.getAllShareHolders();
     const _allProposals = await contract.getAllProposals();
-    console.log("pros");
 
+    console.log("proposals");
     console.log(_allProposals);
-    console.log(_allShareHolders);
+
+    let proposals: proposal[] = [];
+
+    for (let index = 0; index < _allProposals.length; index++) {
+      const element = _allProposals[index];
+
+      const owner = element[0];
+      const description = hexBytesToString(element[2]);
+      const title = element[1];
+      const executed = element[3];
+      const timestamp = element[4];
+      const approvals = element[5];
+      const totalProposedDilutions = element[6];
+
+      proposals.push({
+        owner,
+        description,
+        title,
+        executed,
+        timestamp,
+        approvals,
+        totalProposedDilutions,
+      });
+    }
+
     let shareHolders: shareHolder[] = [];
     for (let index = 0; index < _allShareHolders.length; index++) {
       const id = Number(_allShareHolders[index][0]);
       const address = _allShareHolders[index][1];
       const amount = Number(ethers.formatEther(_allShareHolders[index][2]));
-      console.log({ id, address, amount });
 
       shareHolders.push({ id, address, amount });
     }
@@ -55,6 +82,7 @@ function CompanyDashboard() {
       owner: state.owner,
       shareHolders: shareHolders,
       address: tokenAddress,
+      proposals: proposals,
     });
 
     console.log(shareHolders);
@@ -91,16 +119,24 @@ function CompanyDashboard() {
           close={() => setShowAddProposalModel(false)}
         />
       )}
+      {showPropsalModel && companyData && (
+        <ShowProposalModel
+          p={showPropsalModel}
+          close={() => setShowProposalModel(null)}
+          tokenAddress={companyData.address}
+          proposalId={companyData.proposals.indexOf(showPropsalModel)}
+        />
+      )}
       <main className="flex flex-col justify-start w-full min-h-screen items-start z-0">
         {companyData && (
           <div className="grid grid-cols-1 md:grid-cols-2 ">
-            <section className="flex flex-col justify-start items-start h-fulls w-[50vw] bg-green-500 p-4 z-0">
+            <section className="flex flex-col justify-start items-start w-[50vw]  p-4 z-0">
               <h1>
                 {companyData.name} ({companyData.symbol})
               </h1>
               <h4>Token addres: {companyData.address}</h4>
               <br />
-              <div className="w-full flex flex-row justify-between">
+              <div className="w-full flex flex-row justify-between align-middle items-center">
                 <h2>Proposals</h2>
                 <button
                   onClick={() => {
@@ -111,8 +147,41 @@ function CompanyDashboard() {
                   +
                 </button>
               </div>
+
+              {companyData.proposals.map((proposal) => (
+                <button
+                  onClick={() => setShowProposalModel(proposal)}
+                  key={Number(proposal.timestamp)}
+                  className="flex flex-col w-[90%] p-4 rounded-xl m-4 align-middle items-center border-2 border-amber-500"
+                >
+                  {/* <h3>{proposal.description}</h3> */}
+                  <h3>{proposal.title}</h3>
+                  <table className="w-full p-4">
+                    <tr>
+                      <td>Owner</td>
+                      <td>{proposal.owner}</td>
+                    </tr>
+                    <tr>
+                      <td>Proposed On</td>
+                      <td>
+                        {new Date(
+                          Number(proposal.timestamp) * 1000
+                        ).toDateString()}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Approvals</td>
+                      <td>{Number(proposal.approvals)}</td>
+                    </tr>
+                    <tr>
+                      <td>Executed</td>
+                      <td>{proposal.executed ? "Yes" : "No"}</td>
+                    </tr>
+                  </table>
+                </button>
+              ))}
             </section>
-            <section className="flex flex-col justify-center items-center align-middle bg-red-500 w-[50vw] z-0">
+            <section className="flex flex-col justify-center items-center align-middle  z-0">
               <br />
               <Chart
                 options={options}
@@ -148,199 +217,3 @@ function CompanyDashboard() {
 }
 
 export default CompanyDashboard;
-
-type props = {
-  initialShareHolders: shareHolder[];
-  close: MouseEventHandler<HTMLButtonElement>;
-  tokenAddress: string;
-};
-
-function AddProposalModel({ initialShareHolders, close, tokenAddress }: props) {
-  const { walletProvider } = useWeb3ModalProvider();
-  const [title, setTitle] = useState("");
-  const [proposedShareHolders, setProposedShareHolders] =
-    useState<shareHolder[]>(initialShareHolders);
-  const [description, setDescription] = useState("");
-  const [proposedShares, setProposedShares] = useState<number[]>([]);
-  const [dilutions, setDilutions] = useState<
-    {
-      from: string;
-      amount: number;
-    }[]
-  >([]);
-
-  async function addProposal() {
-    if (proposedShares.reduce((a, b) => a + b, 0) !== 100) {
-      alert("Sum of shares should be equal to 100");
-      return;
-    }
-
-    const provider = new ethers.BrowserProvider(
-      walletProvider as ethers.Eip1193Provider
-    );
-
-    const signer = await provider.getSigner();
-
-    const providerContract = new ethers.Contract(
-      tokenAddress,
-      COMPANY_TOKEN_CONTRACT_ABI,
-      provider
-    );
-    const signerContract = new ethers.Contract(
-      tokenAddress,
-      COMPANY_TOKEN_CONTRACT_ABI,
-      signer
-    );
-
-    console.log(signerContract);
-    let inititalCapital = []; // in ETH
-    let finalCapital = proposedShares.map((share) => {
-      return (share / 100) * 100;
-    });
-    let dilutions = [];
-
-    for (let index = 0; index < initialShareHolders.length; index++) {
-      const element = initialShareHolders[index];
-      const balance = await providerContract.balanceOf(element.address);
-      const paresdBalance = Number(ethers.formatEther(`${balance}`));
-      inititalCapital.push(paresdBalance);
-    }
-    console.log(inititalCapital);
-    console.log(finalCapital);
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center z-10 ">
-      <div className="bg-white p-4 rounded-xl w-[75%] max-h-90% overflow-y-scroll custom-scrollbar">
-        <div className="flex flex-col">
-          <div className="flex flex-row justify-between">
-            <h2>Add Proposal</h2>
-            <button onClick={close}>X</button>
-          </div>
-          <br />
-          <input
-            type="text"
-            placeholder="Title"
-            className="border-b-2 border-gray-500 px-4 py-2"
-            onChange={(e) => setTitle(e.target.value)}
-            value={title}
-          />
-          <br />
-          <textarea
-            className="border-b-2 border-gray-500 px-4 py-2"
-            placeholder="Description"
-            onChange={(e) => setDescription(e.target.value)}
-            value={description}
-          />
-        </div>{" "}
-        <br />
-        <table className="w-full bg-red-500 my-4 ">
-          <thead>
-            <tr>
-              <th className="text-center">Address</th>
-              <th className="text-center">Initial Share (%)</th>
-              <th className="text-center">Proposed Final Share (%)</th>
-              <th className="text-center">Diluted From</th>
-            </tr>
-          </thead>
-          <tbody className="mt-2">
-            {proposedShareHolders.map((shareHolder) => (
-              <tr key={shareHolder.id}>
-                {shareHolder.id < initialShareHolders.length ? (
-                  <td className="text-center">
-                    {shareHolder.address.substring(0, 6) +
-                      "..." +
-                      shareHolder.address.substring(38)}
-                  </td>
-                ) : (
-                  <td>
-                    <input
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setProposedShareHolders((prev) => {
-                          prev[shareHolder.id].address = value;
-                          return prev;
-                        });
-                      }}
-                      type="text"
-                      placeholder="Address"
-                      className="border-b-2 border-gray-500 px-4 py-2"
-                    />
-                  </td>
-                )}
-                <td className="text-center">{shareHolder.amount}</td>
-                <td className="text-center">
-                  <input
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setProposedShares((prev) => {
-                        prev[shareHolder.id] = value;
-                        return prev;
-                      });
-                    }}
-                    type="number"
-                    placeholder="Final Share"
-                    className="border-b-2 border-gray-500 px-4 py-2"
-                  />
-                </td>
-                <td>
-                  {shareHolder.id >= initialShareHolders.length && (
-                    <select
-                      onChange={(val) => {
-                        console.log(val);
-                      }}
-                    >
-                      {initialShareHolders.map((item) => (
-                        <option className="font-bold" value={item.address}>
-                          {item.address.substring(0, 6) +
-                            "..." +
-                            item.address.substring(38)}
-                        </option>
-                      ))}
-                    </select>
-                  )}{" "}
-                </td>
-                <td>
-                  <button
-                    disabled={shareHolder.id < initialShareHolders.length}
-                    onClick={() => {
-                      setProposedShareHolders((prev) => {
-                        return prev.filter(
-                          (item) => item.id !== shareHolder.id
-                        );
-                      });
-                    }}
-                    className=" m-0 p-0 bg-yellow-500 h-7 w-7 rounded-full"
-                  >
-                    X
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button
-          onClick={() => {
-            setProposedShareHolders((prev) => [
-              ...prev,
-              {
-                id: prev.length,
-                address: "",
-                amount: 0,
-              },
-            ]);
-          }}
-          className="text-sm mb-4 mx-2 align-middle text-center"
-        >
-          Add Share Holder
-        </button>
-        <button
-          onClick={addProposal}
-          className="w-full bg-slate-400 rounded-md cursor-pointer py-2 hover:bg-slate-500 transition ease-linear duration-75 font-bold"
-        >
-          Add
-        </button>
-      </div>
-    </div>
-  );
-}

@@ -27,6 +27,7 @@ function AllCompanies() {
     const ethersProvider = new ethers.BrowserProvider(
       walletProvider as ethers.Eip1193Provider
     );
+
     const signer = await ethersProvider.getSigner();
 
     const contract = new ethers.Contract(
@@ -84,7 +85,6 @@ function AllCompanies() {
 
   useEffect(function () {
     setUp();
-    return () => {};
   }, []);
 
   return (

@@ -13,6 +13,7 @@ function CreateCompany() {
   const [companyName, setCompanyName] = useState("");
   const [symbol, setSymbol] = useState("");
   const [minRequired, setMinRequired] = useState<number>(0);
+  const [initalCapital, setInitialCapital] = useState<number>(0);
 
   const { isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
@@ -58,6 +59,10 @@ function CreateCompany() {
       alert("Symbol too short");
     }
 
+    if (initalCapital <= 0) {
+      alert("Initial capital must be greater than 0");
+    }
+
     if (symbol.length > 5) {
       alert("Symbol too long");
     }
@@ -80,7 +85,8 @@ function CreateCompany() {
         const res = await contract.createCompanyToken(
           companyName,
           symbol,
-          minRequired
+          minRequired,
+          initalCapital
         );
         console.log(res);
       } catch (error) {
@@ -131,6 +137,19 @@ function CreateCompany() {
                 type="number"
                 value={minRequired}
                 onChange={(e) => setMinRequired(parseInt(e.target.value))}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td className=" text-left">
+              <label> Initial Captial (ETH) </label>
+            </td>
+            <td>
+              <input
+                className="px-2 py-1 ml-2 border-2 border-gray-300 rounded-lg"
+                type="number"
+                value={initalCapital}
+                onChange={(e) => setInitialCapital(parseInt(e.target.value))}
               />
             </td>
           </tr>

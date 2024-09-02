@@ -5,14 +5,30 @@ export type data = {
   symbol: string;
   owner: string;
   address: string;
-
   shareHolders: shareHolder[];
+  proposals: proposal[];
 };
 
 export type shareHolder = {
   id: number;
   address: string;
   amount: number;
+};
+
+export type proposal = {
+  owner: string;
+  description: string;
+  title: string;
+  executed: boolean;
+  timestamp: number;
+  approvals: number;
+  totalProposedDilutions: number;
+};
+
+export type dilution = {
+  from: string;
+  amount: number;
+  to: string;
 };
 
 export const chartOptions: ApexOptions = {
@@ -39,4 +55,4 @@ export const chartOptions: ApexOptions = {
       },
     },
   ],
-}
+};

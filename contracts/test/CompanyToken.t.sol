@@ -55,6 +55,7 @@ contract CompanyTokenTest is Test {
         dilutionsFROM[0] = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);
 
         companyToken.addProposal(
+            "CompanyToken",
             "{`from`:{`initial`:100,`final`:50,`address`:`0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`},`to`:{`initial`:0,`final`:50,`address`:`0x70997970C51812dc3A010C7d01b50e0d17dc79C8`}}",
             dilutionsTO,
             dilutionsFROM,

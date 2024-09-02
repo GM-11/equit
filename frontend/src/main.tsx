@@ -85,7 +85,7 @@ function Root() {
     themeVariables: {
       "--w3m-color-mix": "#708090",
     },
-    defaultChain: baseSepolia,
+    defaultChain: anvil,
     chains: [coreTestnet, baseSepolia, anvil],
     projectId,
     enableAnalytics: true,
