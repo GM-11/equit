@@ -8,6 +8,7 @@ import {
   COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
   COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
 } from "../utils/constants";
+import { Link } from "react-router-dom";
 
 function CreateCompany() {
   const [companyName, setCompanyName] = useState("");
@@ -156,11 +157,17 @@ function CreateCompany() {
         </table>
       </form>{" "}
       <button
-        className="px-4 py-2  my-4 border-emerald-400 border-2 rounded-lg  hover:bg-emerald-100 transition ease-in font-bold duration-100"
+        className="px-4 py-2  mt-4 w-[15%] border-emerald-400 border-2 rounded-lg  hover:bg-emerald-100 transition ease-in font-bold duration-100"
         onClick={createCompany}
       >
         Create Company
       </button>
+      <Link
+        to="/companies"
+        className="px-4 py-2 mt-2 w-[15%] border-emerald-400 border-2 rounded-lg  hover:bg-emerald-100 transition ease-in font-bold duration-100"
+      >
+        See all companies
+      </Link>
     </main>
   );
 }

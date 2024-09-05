@@ -7,7 +7,7 @@ function LandingPage() {
       <h1 className="text-9xl tracking-widest">EQUIT</h1>
 
       <p>Manage your equity on</p>
-      <h2 className="font-bold">BITCOIN</h2>
+      <h2 className="font-bold">BLOCKCHAIN</h2>
       <button
         onClick={() => {
           navigate("/create");

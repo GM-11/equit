@@ -2,7 +2,7 @@ import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
 import { useLocation, useParams } from "react-router-dom";
 import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { chartOptions, data, proposal, shareHolder } from "../utils/types";
@@ -27,18 +27,27 @@ function CompanyDashboard() {
       return;
     }
 
+    console.log('adsfklj');
+    
+
     const provider = new ethers.BrowserProvider(
       walletProvider as ethers.Eip1193Provider
     );
 
+    const signer = await provider.getSigner();
     const contract = new ethers.Contract(
       tokenAddress,
       COMPANY_TOKEN_CONTRACT_ABI,
-      provider
+      signer
     );
+
+    console.log(contract);
+    
 
     const _allShareHolders = await contract.getAllShareHolders();
     const _allProposals = await contract.getAllProposals();
+    console.log(_allShareHolders);
+    
 
     console.log("proposals");
     console.log(_allProposals);
@@ -83,6 +92,7 @@ function CompanyDashboard() {
       shareHolders: shareHolders,
       address: tokenAddress,
       proposals: proposals,
+      totalCapital: state.capital
     });
 
     console.log(shareHolders);
@@ -107,6 +117,8 @@ function CompanyDashboard() {
   }
 
   useEffect(() => {
+    console.log('ads;fklj');
+    
     getData();
   }, []);
 
@@ -117,6 +129,7 @@ function CompanyDashboard() {
           initialShareHolders={companyData.shareHolders}
           tokenAddress={companyData.address}
           close={() => setShowAddProposalModel(false)}
+          totalCapital={companyData.totalCapital}
         />
       )}
       {showPropsalModel && companyData && (

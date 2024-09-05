@@ -16,6 +16,7 @@ type company = {
   symbol: string;
   address: string;
   owner: string;
+  totalCapital: number;
 };
 
 function AllCompanies() {
@@ -48,42 +49,49 @@ function AllCompanies() {
         signer
       );
 
+      console.log(element);
+
       const shareHolders = await companyContract.getAllShareHolders();
+      let total = 0;
 
       for (let index = 0; index < shareHolders.length; index++) {
         const holder = shareHolders[index];
+        console.log("holder");
+        console.log(holder);
+        total += Number(holder[2]) / 10 ** 18;
+
         if (holder[1] === address) {
           c.push({
             name: element[0],
             symbol: element[1],
             owner: element[2],
             address: element[3],
+            totalCapital: total,
           });
           c.push({
             name: element[0],
             symbol: element[1],
             owner: element[2],
             address: element[3],
+            totalCapital: total,
           });
           c.push({
             name: element[0],
             symbol: element[1],
             owner: element[2],
             address: element[3],
-          });
-          c.push({
-            name: element[0],
-            symbol: element[1],
-            owner: element[2],
-            address: element[3],
+            totalCapital: total,
           });
         }
       }
     }
     setCompanies(c);
+    console.log(c);
   }
 
   useEffect(function () {
+    console.log("use effect");
+
     setUp();
   }, []);
 
@@ -97,7 +105,7 @@ function AllCompanies() {
         {companies.map((c, index) => (
           <Link
             to={`/company/${c.address}`}
-            state={{ name: c.name, symbol: c.symbol, owner: c.owner }}
+            state={{ name: c.name, symbol: c.symbol, owner: c.owner, capital: c.totalCapital }}
             className="border-2 border-emerald-300 p-4 flex flex-col justify-start items-start m-4 rounded-xl"
             key={index}
           >
@@ -111,6 +119,8 @@ function AllCompanies() {
             <h4>
               Owner: <strong>{c.owner}</strong>
             </h4>
+
+            <>{c.totalCapital}</>
           </Link>
         ))}
       </section>{" "}

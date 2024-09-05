@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, useEffect, useState } from "react";
 import { dilution, proposal } from "../utils/types";
 import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { ethers } from "ethers";

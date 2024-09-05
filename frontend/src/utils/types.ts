@@ -7,6 +7,7 @@ export type data = {
   address: string;
   shareHolders: shareHolder[];
   proposals: proposal[];
+  totalCapital: number
 };
 
 export type shareHolder = {
