@@ -159,7 +159,7 @@ export default function AddProposalModel({
           />
         </div>{" "}
         <br />
-        <table className="w-full bg-red-500 my-4 ">
+        <table className="w-full my-4 ">
           <thead>
             <tr>
               <th className="text-center">Address</th>
