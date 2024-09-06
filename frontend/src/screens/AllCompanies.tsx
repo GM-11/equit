@@ -5,7 +5,6 @@ import {
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import {
-  COMPANY_TOKEN_CONTRACT_ABI,
   COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
   COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
 } from "../utils/constants";
@@ -16,12 +15,10 @@ type company = {
   symbol: string;
   address: string;
   owner: string;
-  totalCapital: number;
 };
 
 function AllCompanies() {
   const { walletProvider } = useWeb3ModalProvider();
-  const { address } = useWeb3ModalAccount();
   const [companies, setCompanies] = useState<company[]>([]);
 
   async function setUp() {
@@ -43,47 +40,14 @@ function AllCompanies() {
     for (let index = 0; index < allTokens.length; index++) {
       const element = allTokens[index];
 
-      let companyContract = new ethers.Contract(
-        element[3],
-        COMPANY_TOKEN_CONTRACT_ABI,
-        signer
-      );
-
       console.log(element);
 
-      const shareHolders = await companyContract.getAllShareHolders();
-      let total = 0;
-
-      for (let index = 0; index < shareHolders.length; index++) {
-        const holder = shareHolders[index];
-        console.log("holder");
-        console.log(holder);
-        total += Number(holder[2]) / 10 ** 18;
-
-        if (holder[1] === address) {
-          c.push({
-            name: element[0],
-            symbol: element[1],
-            owner: element[2],
-            address: element[3],
-            totalCapital: total,
-          });
-          c.push({
-            name: element[0],
-            symbol: element[1],
-            owner: element[2],
-            address: element[3],
-            totalCapital: total,
-          });
-          c.push({
-            name: element[0],
-            symbol: element[1],
-            owner: element[2],
-            address: element[3],
-            totalCapital: total,
-          });
-        }
-      }
+      c.push({
+        name: element[0],
+        symbol: element[1],
+        owner: element[2],
+        address: element[3],
+      });
     }
     setCompanies(c);
     console.log(c);
@@ -105,7 +69,11 @@ function AllCompanies() {
         {companies.map((c, index) => (
           <Link
             to={`/company/${c.address}`}
-            state={{ name: c.name, symbol: c.symbol, owner: c.owner, capital: c.totalCapital }}
+            state={{
+              name: c.name,
+              symbol: c.symbol,
+              owner: c.owner,
+            }}
             className="border-2 border-emerald-300 p-4 flex flex-col justify-start items-start m-4 rounded-xl"
             key={index}
           >
@@ -119,8 +87,6 @@ function AllCompanies() {
             <h4>
               Owner: <strong>{c.owner}</strong>
             </h4>
-
-            <>{c.totalCapital}</>
           </Link>
         ))}
       </section>{" "}

@@ -29,14 +29,14 @@ function CreateCompany() {
         provider
       );
 
-      console.log(contract);
-
-      contract.on("CompanyTokenCreated", function (event) {
-        console.log("Company Token Created \n", event);
+      contract.on("ApproveProposal", function (event) {
+        console.log("Proposal Approved \n", event);
+        alert("Proposal Approved");
       });
       return function () {
-        contract.off("CompanyTokenCreated", function (event) {
-          console.log("Company Token Created OFF\n", event);
+        contract.off("ApproveProposal", function (event) {
+          console.log("Proposal Approved \n", event);
+          alert("Proposal Approved");
         });
       };
     }

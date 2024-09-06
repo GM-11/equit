@@ -1,7 +1,14 @@
-import { useWeb3ModalProvider } from "@web3modal/ethers/react";
-import { ethers } from "ethers";
-import { MouseEventHandler, useState } from "react";
-import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";
+import {
+  useWeb3ModalAccount,
+  useWeb3ModalProvider,
+} from "@web3modal/ethers/react";
+import { BrowserProvider, ethers } from "ethers";
+import { MouseEventHandler, useEffect, useState } from "react";
+import {
+  COMPANY_TOKEN_CONTRACT_ABI,
+  COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
+  COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
+} from "../utils/constants";
 import { shareHolder } from "../utils/types";
 
 type props = {
@@ -32,6 +39,31 @@ export default function AddProposalModel({
   const [proposedShareHolders, setProposedShareHolders] =
     useState<newShareHolder[]>(initialShareHolders);
 
+  const { isConnected } = useWeb3ModalAccount();
+
+  useEffect(() => {
+    if (isConnected) {
+      const provider = new BrowserProvider(
+        walletProvider as ethers.Eip1193Provider
+      );
+      const contract = new ethers.Contract(
+        tokenAddress,
+        COMPANY_TOKEN_CONTRACT_ABI,
+        provider
+      );
+
+      contract.on("CompanyTokenCreated", function (event) {
+        console.log("Company Token Created \n", event);
+        alert("Company Token Created");
+      });
+      return function () {
+        contract.off("CompanyTokenCreated", function (event) {
+          console.log("Company Token Created OFF\n", event);
+        });
+      };
+    }
+  }, []);
+
   async function addProposal() {
     if (proposedShareHolders.reduce((a, b) => a + b.amount, 0) !== 100) {
       alert("Sum of shares should be equal to 100");
@@ -49,11 +81,6 @@ export default function AddProposalModel({
 
     const signer = await provider.getSigner();
 
-    const providerContract = new ethers.Contract(
-      tokenAddress,
-      COMPANY_TOKEN_CONTRACT_ABI,
-      provider
-    );
     const signerContract = new ethers.Contract(
       tokenAddress,
       COMPANY_TOKEN_CONTRACT_ABI,

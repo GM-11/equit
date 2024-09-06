@@ -2,7 +2,7 @@ import CompanyToken from "./abis/CompanyToken.json";
 import CompanyNameFactory from "./abis/CompanyTokenFactory.json";
 
 export const COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS =
-  "0x671A2AC29d2C6B4565FC5C6ae9c995aDE29Db7b5";
+  "0x48c9FCE252Bfb2aDcF6862A0DeF78d20113C4136";
 
 export const COMPANY_TOKEN_FACTORY_CONTRACT_ABI = CompanyNameFactory.abi;
 

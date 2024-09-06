@@ -15,7 +15,6 @@ import ShowProposalModel from "../modals/ShowProposalModel";
 
 function CompanyDashboard() {
   const { walletProvider } = useWeb3ModalProvider();
-  const { address } = useWeb3ModalAccount();
   const { tokenAddress } = useParams();
   let { state } = useLocation();
   const [companyData, setCompanyData] = useState<data>();
@@ -31,8 +30,6 @@ function CompanyDashboard() {
       return;
     }
 
-    console.log("adsfklj");
-
     const provider = new ethers.BrowserProvider(
       walletProvider as ethers.Eip1193Provider
     );
@@ -43,23 +40,20 @@ function CompanyDashboard() {
       COMPANY_TOKEN_CONTRACT_ABI,
       signer
     );
-
-    console.log(contract);
+    const providerContract = new ethers.Contract(
+      tokenAddress,
+      COMPANY_TOKEN_CONTRACT_ABI,
+      provider
+    );
 
     const _allShareHolders = await contract.getAllShareHolders();
     const _allProposals = await contract.getAllProposals();
     const minRequired = Number(await contract.MIN_REQUIRED());
-    console.log(_allShareHolders);
-
-    console.log("proposals");
-    console.log(_allProposals);
 
     let proposals: proposal[] = [];
 
     for (let index = 0; index < _allProposals.length; index++) {
       const element = _allProposals[index];
-
-      console.log(element);
 
       const id = Number(element[0]);
       const owner = element[1];
@@ -86,7 +80,9 @@ function CompanyDashboard() {
     for (let index = 0; index < _allShareHolders.length; index++) {
       const id = Number(_allShareHolders[index][0]);
       const address = _allShareHolders[index][1];
-      const amount = Number(ethers.formatEther(_allShareHolders[index][2]));
+      const amount = Number(
+        ethers.formatEther(await providerContract.balanceOf(address))
+      );
 
       shareHolders.push({ id, address, amount });
     }
@@ -141,8 +137,6 @@ function CompanyDashboard() {
   }
 
   useEffect(() => {
-    console.log("ads;fklj");
-
     getData();
   }, []);
 
@@ -192,36 +186,36 @@ function CompanyDashboard() {
 
               {companyData.proposals.map((proposal) => {
                 return (
-                  <button
-                    onClick={() => setShowProposalModel(proposal)}
+                  <div
                     key={Number(proposal.timestamp)}
                     className="flex flex-col w-[90%] p-4 rounded-xl m-4 align-middle items-center border-2 border-amber-500"
                   >
-                    <h3>{proposal.title}</h3>
-                    <table className="w-full p-4">
-                      <tr>
-                        <td>Owner</td>
-                        <td>{proposal.owner}</td>
-                      </tr>
-                      <tr>
-                        <td>Proposed On</td>
-                        <td>
-                          {new Date(
-                            Number(proposal.timestamp) * 1000
-                          ).toDateString()}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Approvals</td>
-                        <td>{Number(proposal.approvals)}</td>
-                      </tr>
-                      <tr>
-                        <td>Executed</td>
-                        <td>{proposal.executed ? "Yes" : "No"}</td>
-                      </tr>
-                    </table>
-
-                    {companyData.shareHolders.length <
+                    <button onClick={() => setShowProposalModel(proposal)}>
+                      <h3>{proposal.title}</h3>
+                      <table className="w-full p-4">
+                        <tr>
+                          <td>Owner</td>
+                          <td>{proposal.owner}</td>
+                        </tr>
+                        <tr>
+                          <td>Proposed On</td>
+                          <td>
+                            {new Date(
+                              Number(proposal.timestamp) * 1000
+                            ).toDateString()}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Approvals</td>
+                          <td>{Number(proposal.approvals)}</td>
+                        </tr>
+                        <tr>
+                          <td>Executed</td>
+                          <td>{proposal.executed ? "Yes" : "No"}</td>
+                        </tr>
+                      </table>
+                    </button>
+                    {companyData.shareHolders.length <=
                       companyData.minRequired && (
                       <button
                         onClick={() => executeProposal(proposal.id)}
@@ -234,7 +228,7 @@ function CompanyDashboard() {
                     {proposal.approvals < companyData.minRequired
                       ? "Not enough approvals"
                       : "Enough Approvals"}
-                  </button>
+                  </div>
                 );
               })}
             </section>

@@ -171,8 +171,24 @@ contract CompanyToken is ERC20, ERC20Burnable {
 
         uint256 total = proposals[proposalId].totalProposedDilutions;
 
+        // shareHolders[shareHoldersCount] = ShareHolder(
+        //     shareHoldersCount,
+        //     msg.sender,
+        //     total
+        // );
+        // unchecked {
+        //     shareHoldersCount++;
+        // }
+
         for (uint256 i = 0; i < total; ) {
             Dilutions memory dilution = proposedDilutions[proposalId][i];
+
+            shareHolders[shareHoldersCount] = ShareHolder(
+                shareHoldersCount,
+                dilution.to,
+                dilution.amount * (10 ** decimals())
+            );
+
             _transfer(
                 dilution.from,
                 dilution.to,
@@ -180,6 +196,7 @@ contract CompanyToken is ERC20, ERC20Burnable {
             );
             unchecked {
                 ++i;
+                ++shareHoldersCount;
             }
         }
 
