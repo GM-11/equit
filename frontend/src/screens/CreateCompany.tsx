@@ -68,8 +68,6 @@ function CreateCompany() {
     );
     const signer = await ethersProvider.getSigner();
 
-    console.log(signer);
-
     if (isConnected) {
       const contract = new ethers.Contract(
         COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,

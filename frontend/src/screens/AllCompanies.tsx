@@ -1,7 +1,4 @@
-import {
-  useWeb3ModalAccount,
-  useWeb3ModalProvider,
-} from "@web3modal/ethers/react";
+import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import {
@@ -40,8 +37,6 @@ function AllCompanies() {
     for (let index = 0; index < allTokens.length; index++) {
       const element = allTokens[index];
 
-      console.log(element);
-
       c.push({
         name: element[0],
         symbol: element[1],
@@ -50,12 +45,9 @@ function AllCompanies() {
       });
     }
     setCompanies(c);
-    console.log(c);
   }
 
   useEffect(function () {
-    console.log("use effect");
-
     setUp();
   }, []);
 

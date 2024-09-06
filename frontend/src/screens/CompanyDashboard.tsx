@@ -1,7 +1,4 @@
-import {
-  useWeb3ModalAccount,
-  useWeb3ModalProvider,
-} from "@web3modal/ethers/react";
+import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
 import { useLocation, useParams } from "react-router-dom";
 import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";

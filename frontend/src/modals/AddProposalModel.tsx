@@ -4,11 +4,7 @@ import {
 } from "@web3modal/ethers/react";
 import { BrowserProvider, ethers } from "ethers";
 import { MouseEventHandler, useEffect, useState } from "react";
-import {
-  COMPANY_TOKEN_CONTRACT_ABI,
-  COMPANY_TOKEN_FACTORY_CONTRACT_ABI,
-  COMPANY_TOKEN_FACTORY_CONTRACT_ADDRESS,
-} from "../utils/constants";
+import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";
 import { shareHolder } from "../utils/types";
 
 type props = {
@@ -29,7 +25,6 @@ export default function AddProposalModel({
   initialShareHolders,
   close,
   tokenAddress,
-  totalCapital,
 }: props) {
   const { walletProvider } = useWeb3ModalProvider();
   const [title, setTitle] = useState("");
@@ -99,13 +94,6 @@ export default function AddProposalModel({
       };
     });
 
-    // for (let index = 0; index < initialShareHolders.length; index++) {
-    //   const element = initialShareHolders[index];
-    //   const balance = await providerContract.balanceOf(element.address);
-    //   const paresdBalance = Number(ethers.formatEther(`${balance}`));
-    //   totalCapital += paresdBalance;
-    // }
-
     const dilutionsTO = dilutions.map((val) => {
       return val.to;
     });
@@ -115,10 +103,6 @@ export default function AddProposalModel({
     const dilutionsAMOUNT = dilutions.map((val) => {
       return val.amount;
     });
-
-    console.log(dilutionsTO, "dilutionsTO");
-    console.log(dilutionsFROM, "dilutionsFROM");
-    console.log(dilutionsAMOUNT, "dilutionsAMOUNT");
 
     if (dilutionsTO.length === 0) {
       alert("No dilutions");
@@ -203,8 +187,6 @@ export default function AddProposalModel({
                           prev[shareHolder.id].address = value;
                           return prev;
                         });
-                        // let d = dilutions;
-                        // d.push({ from: initialShareHolders[0].address, amount: proposedShares[value], to: value });
                       }}
                       type="text"
                       placeholder="Address"
