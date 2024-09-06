@@ -8,10 +8,9 @@ type props = {
   p: proposal;
   close: MouseEventHandler<HTMLButtonElement>;
   tokenAddress: string;
-  proposalId: number;
 };
 
-function ShowProposalModel({ p, close, tokenAddress, proposalId }: props) {
+function ShowProposalModel({ p, close, tokenAddress }: props) {
   const { walletProvider } = useWeb3ModalProvider();
 
   const [dilutions, setDilutions] = useState<dilution[]>([]);
@@ -20,7 +19,6 @@ function ShowProposalModel({ p, close, tokenAddress, proposalId }: props) {
     const provider = new ethers.BrowserProvider(
       walletProvider as ethers.Eip1193Provider
     );
-    console.log(proposalId);
 
     const signer = await provider.getSigner();
 
@@ -59,7 +57,9 @@ function ShowProposalModel({ p, close, tokenAddress, proposalId }: props) {
       signer
     );
 
-    const tx = await contract.revoke(proposalId);
+    console.log(p.id);
+
+    const tx = await contract.revokeProposal(p.id);
     await tx.wait();
     console.log(tx);
   }
@@ -77,7 +77,8 @@ function ShowProposalModel({ p, close, tokenAddress, proposalId }: props) {
       signer
     );
 
-    const tx = await contract.approveProposal(proposalId);
+
+    const tx = await contract.approveProposal(p.id);
     await tx.wait();
     console.log(tx);
   }

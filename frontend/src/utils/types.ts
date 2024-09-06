@@ -8,6 +8,7 @@ export type data = {
   shareHolders: shareHolder[];
   proposals: proposal[];
   totalCapital: number
+  minRequired: number;
 };
 
 export type shareHolder = {
@@ -17,6 +18,7 @@ export type shareHolder = {
 };
 
 export type proposal = {
+  id: number;
   owner: string;
   description: string;
   title: string;

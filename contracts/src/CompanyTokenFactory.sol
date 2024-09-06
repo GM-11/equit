@@ -21,15 +21,13 @@ contract CompanyTokenFactory {
     function createCompanyToken(
         string memory name,
         string memory symbol,
-        uint256 minRequired,
-        uint256 initialCapital
+        uint256 minRequired
     ) external {
         CompanyToken companyToken = new CompanyToken(
             name,
             symbol,
             msg.sender,
-            minRequired,
-            initialCapital
+            minRequired
         );
         companyTokens[companyTokensCount] = CompanyTokenData(
             name,

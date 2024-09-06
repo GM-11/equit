@@ -22,10 +22,12 @@ export default function AddProposalModel({
   initialShareHolders,
   close,
   tokenAddress,
+  totalCapital,
 }: props) {
   const { walletProvider } = useWeb3ModalProvider();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [proposedShares, setProposedShares] = useState<number[]>([]);
 
   const [proposedShareHolders, setProposedShareHolders] =
     useState<newShareHolder[]>(initialShareHolders);
@@ -62,29 +64,20 @@ export default function AddProposalModel({
       return val.id >= initialShareHolders.length;
     });
 
-    let totalCapital = 0;
-
     const dilutions = newShareHolders.map((val) => {
       return {
         from: val.dilutedFrom,
-        amount: val.amount,
+        amount: proposedShares[proposedShareHolders.indexOf(val)],
         to: val.address,
       };
     });
 
-    for (let index = 0; index < initialShareHolders.length; index++) {
-      const element = initialShareHolders[index];
-      const balance = await providerContract.balanceOf(element.address);
-      const paresdBalance = Number(ethers.formatEther(`${balance}`));
-      totalCapital += paresdBalance;
-    }
-
-    if (totalCapital === 0) {
-      alert("Total Capital is 0");
-      return;
-    }
-
-    console.log(totalCapital, "total capital");
+    // for (let index = 0; index < initialShareHolders.length; index++) {
+    //   const element = initialShareHolders[index];
+    //   const balance = await providerContract.balanceOf(element.address);
+    //   const paresdBalance = Number(ethers.formatEther(`${balance}`));
+    //   totalCapital += paresdBalance;
+    // }
 
     const dilutionsTO = dilutions.map((val) => {
       return val.to;
@@ -93,7 +86,7 @@ export default function AddProposalModel({
       return val.from;
     });
     const dilutionsAMOUNT = dilutions.map((val) => {
-      return (val.amount / 100) * totalCapital;
+      return val.amount;
     });
 
     console.log(dilutionsTO, "dilutionsTO");
@@ -114,11 +107,11 @@ export default function AddProposalModel({
       return;
     }
 
-    const descriptionBytes = new TextEncoder().encode(description);
+    const descriptionBytes = new TextEncoder().encode(description.trim());
 
     const tx = await signerContract.addProposal(
       descriptionBytes,
-      title,
+      title.trim(),
       dilutionsTO,
       dilutionsFROM,
       dilutionsAMOUNT,
@@ -202,8 +195,8 @@ export default function AddProposalModel({
                   <input
                     onChange={(e) => {
                       const value = Number(e.target.value);
-                      setProposedShareHolders((prev) => {
-                        prev[shareHolder.id].amount = value;
+                      setProposedShares((prev) => {
+                        prev[shareHolder.id] = value;
                         return prev;
                       });
                     }}

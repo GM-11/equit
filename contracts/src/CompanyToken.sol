@@ -76,11 +76,10 @@ contract CompanyToken is ERC20, ERC20Burnable {
         string memory _name,
         string memory _symbol,
         address _initialShareHolder,
-        uint256 _minRequired,
-        uint256 initialCapital
+        uint256 _minRequired
     ) ERC20(_name, _symbol) {
         require(_initialShareHolder != address(0), "Invalid address");
-        uint256 amount = initialCapital * (10 ** decimals());
+        uint256 amount = 100 * (10 ** decimals());
         _mint(_initialShareHolder, amount);
         unchecked {
             shareHolders[shareHoldersCount] = ShareHolder(
@@ -174,7 +173,11 @@ contract CompanyToken is ERC20, ERC20Burnable {
 
         for (uint256 i = 0; i < total; ) {
             Dilutions memory dilution = proposedDilutions[proposalId][i];
-            _transfer(dilution.from, dilution.to, dilution.amount);
+            _transfer(
+                dilution.from,
+                dilution.to,
+                dilution.amount * (10 ** decimals())
+            );
             unchecked {
                 ++i;
             }
