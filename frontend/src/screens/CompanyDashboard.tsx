@@ -1,4 +1,7 @@
-import { useWeb3ModalProvider } from "@web3modal/ethers/react";
+import {
+  useWeb3ModalAccount,
+  useWeb3ModalProvider,
+} from "@web3modal/ethers/react";
 import { ethers } from "ethers";
 import { useLocation, useParams } from "react-router-dom";
 import { COMPANY_TOKEN_CONTRACT_ABI } from "../utils/constants";
@@ -12,6 +15,7 @@ import ShowProposalModel from "../modals/ShowProposalModel";
 
 function CompanyDashboard() {
   const { walletProvider } = useWeb3ModalProvider();
+  const { address } = useWeb3ModalAccount();
   const { tokenAddress } = useParams();
   let { state } = useLocation();
   const [companyData, setCompanyData] = useState<data>();
@@ -213,14 +217,17 @@ function CompanyDashboard() {
                       </table>
                     </button>
                     {companyData.shareHolders.length <=
-                      companyData.minRequired && (
-                      <button
-                        onClick={() => executeProposal(proposal.id)}
-                        className="px-4 py-2  mt-4 border-emerald-400 border-2 rounded-lg  hover:bg-emerald-100 transition ease-in font-bold duration-100"
-                      >
-                        Execute
-                      </button>
-                    )}
+                      companyData.minRequired &&
+                      companyData.shareHolders
+                        .some((holder) => holder.address === address)
+                        .valueOf() && !proposal.executed.valueOf() && (
+                        <button
+                          onClick={() => executeProposal(proposal.id)}
+                          className="px-4 py-2  mt-4 border-emerald-400 border-2 rounded-lg  hover:bg-emerald-100 transition ease-in font-bold duration-100"
+                        >
+                          Execute
+                        </button>
+                      )}
 
                     {proposal.approvals < companyData.minRequired
                       ? "Not enough approvals"
